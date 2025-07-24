@@ -3,12 +3,15 @@ import { Plus, Edit2, Trash2, Store as StoreIcon, Phone, User } from 'lucide-rea
 import { Store } from '../types';
 import { getStores, createStore, updateStore, deleteStore } from '../lib/database';
 import LoadingSpinner from './LoadingSpinner';
+import DatabaseStatus from './DatabaseStatus';
+import OfflineNotice from './OfflineNotice';
 
 const StoreManagement: React.FC = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
+  const [showOfflineNotice, setShowOfflineNotice] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     contact_person: '',
@@ -47,9 +50,14 @@ const StoreManagement: React.FC = () => {
       setShowForm(false);
       setEditingStore(null);
       setFormData({ name: '', contact_person: '', phone: '' });
+      setShowOfflineNotice(false);
     } catch (error) {
       console.error('Error saving store:', error);
-      alert('حدث خطأ في حفظ المحل');
+      if (error.message?.includes('قاعدة البيانات غير متصلة')) {
+        setShowOfflineNotice(true);
+      } else {
+        alert(`حدث خطأ في حفظ المحل: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -96,6 +104,9 @@ const StoreManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      {showOfflineNotice && <OfflineNotice />}
+      
+      <DatabaseStatus />
       
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة المحلات المجاورة</h1>

@@ -5,6 +5,8 @@ import { getProducts, createProduct, updateProduct, deleteProduct } from '../lib
 import SearchBar from './SearchBar';
 import ConfirmDialog from './ConfirmDialog';
 import LoadingSpinner from './LoadingSpinner';
+import DatabaseStatus from './DatabaseStatus';
+import OfflineNotice from './OfflineNotice';
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -12,6 +14,7 @@ const ProductManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showOfflineNotice, setShowOfflineNotice] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     productId: string;
@@ -63,9 +66,14 @@ const ProductManagement: React.FC = () => {
       setShowForm(false);
       setEditingProduct(null);
       setFormData({ name: '', regular_price: '', store_price: '', employee_price: '' });
+      setShowOfflineNotice(false);
     } catch (error) {
       console.error('Error saving product:', error);
-      alert('حدث خطأ في حفظ المنتج');
+      if (error.message?.includes('قاعدة البيانات غير متصلة')) {
+        setShowOfflineNotice(true);
+      } else {
+        alert(`حدث خطأ في حفظ المنتج: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -126,6 +134,9 @@ const ProductManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      {showOfflineNotice && <OfflineNotice />}
+      
+      <DatabaseStatus />
       
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة المنتجات</h1>

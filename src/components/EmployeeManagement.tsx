@@ -3,12 +3,15 @@ import { Plus, Edit2, Trash2, Users, Calendar, DollarSign } from 'lucide-react';
 import { Employee } from '../types';
 import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '../lib/database';
 import LoadingSpinner from './LoadingSpinner';
+import DatabaseStatus from './DatabaseStatus';
+import OfflineNotice from './OfflineNotice';
 
 const EmployeeManagement: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const [showOfflineNotice, setShowOfflineNotice] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     department: '',
@@ -47,9 +50,14 @@ const EmployeeManagement: React.FC = () => {
       setShowForm(false);
       setEditingEmployee(null);
       setFormData({ name: '', department: '', billing_cycle: 'daily' });
+      setShowOfflineNotice(false);
     } catch (error) {
       console.error('Error saving employee:', error);
-      alert('حدث خطأ في حفظ الموظف');
+      if (error.message?.includes('قاعدة البيانات غير متصلة')) {
+        setShowOfflineNotice(true);
+      } else {
+        alert(`حدث خطأ في حفظ الموظف: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -96,6 +104,9 @@ const EmployeeManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      {showOfflineNotice && <OfflineNotice />}
+      
+      <DatabaseStatus />
       
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة الموظفين</h1>

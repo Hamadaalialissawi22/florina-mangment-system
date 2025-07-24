@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import SearchBar from './SearchBar';
 import LoadingSpinner from './LoadingSpinner';
 import ConfirmDialog from './ConfirmDialog';
+import DatabaseStatus from './DatabaseStatus';
+import OfflineNotice from './OfflineNotice';
 
 interface CartItem {
   product: Product;
@@ -24,6 +26,7 @@ const SalesSystem: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showOfflineNotice, setShowOfflineNotice] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
@@ -146,9 +149,15 @@ const SalesSystem: React.FC = () => {
       setCart([]);
       setSelectedCustomer('');
       setShowConfirmDialog(false);
+      setShowOfflineNotice(false);
       alert('تم تسجيل العملية بنجاح');
     } catch (error) {
-      alert('حدث خطأ أثناء معالجة العملية');
+      if (error.message?.includes('قاعدة البيانات غير متصلة')) {
+        setShowOfflineNotice(true);
+        setShowConfirmDialog(false);
+      } else {
+        alert(`حدث خطأ أثناء معالجة العملية: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -160,6 +169,10 @@ const SalesSystem: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {showOfflineNotice && <OfflineNotice message="لا يمكن حفظ المبيعات. النظام غير متصل بقاعدة البيانات." />}
+      
+      <DatabaseStatus />
+      
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">نظام المبيعات</h1>
         <div className="flex items-center space-x-2 space-x-reverse bg-white px-4 py-2 rounded-lg shadow-sm">

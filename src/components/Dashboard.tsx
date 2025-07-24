@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, Users, Store, Coffee, DollarSign } from 'lucide-react';
 import { getDashboardStats } from '../lib/database';
 import QuickActions from './QuickActions';
+import DatabaseStatus from './DatabaseStatus';
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -92,6 +93,8 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <DatabaseStatus />
+      
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">لوحة التحكم</h1>
         <div className="text-gray-600">
