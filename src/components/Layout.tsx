@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Coffee, Users, Store, FileText, Settings, Calculator, ShoppingCart } from 'lucide-react';
 import NotificationSystem from './NotificationSystem';
+import SupabaseConnector from './SupabaseConnector';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,28 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
   const { signOut } = useAuth();
+  const [showSupabaseConnector, setShowSupabaseConnector] = React.useState(false);
+  const [isSupabaseConnected, setIsSupabaseConnected] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check if Supabase is already configured
+    const url = import.meta.env.VITE_SUPABASE_URL;
+    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const localUrl = localStorage.getItem('supabase_url');
+    const localKey = localStorage.getItem('supabase_key');
+    
+    setIsSupabaseConnected(
+      (url && key && url !== 'your_supabase_url_here' && key !== 'your_supabase_anon_key_here') ||
+      (localUrl && localKey)
+    );
+  }, []);
+
+  const handleSupabaseConnect = (url: string, key: string) => {
+    // In a real app, this would update the environment variables
+    // For now, we'll just update the local state
+    setIsSupabaseConnected(true);
+    window.location.reload(); // Reload to apply new connection
+  };
 
   const navItems = [
     { id: 'dashboard', label: 'الرئيسية', icon: Coffee },
@@ -35,6 +58,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
             </div>
             <div className="flex items-center space-x-4 space-x-reverse">
               <NotificationSystem />
+              {!isSupabaseConnected && (
+                <button
+                  onClick={() => setShowSupabaseConnector(true)}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                >
+                  Connect to Supabase
+                </button>
+              )}
               <button
                 onClick={signOut}
                 className="flex items-center space-x-2 space-x-reverse text-gray-600 hover:text-gray-900 transition-colors"
@@ -46,6 +77,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
           </div>
         </div>
       </header>
+
+      <SupabaseConnector
+        isOpen={showSupabaseConnector}
+        onClose={() => setShowSupabaseConnector(false)}
+        onConnect={handleSupabaseConnect}
+      />
 
       <div className="flex">
         {/* Sidebar */}

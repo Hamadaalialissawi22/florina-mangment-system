@@ -3,9 +3,14 @@ import { Product, Store, Employee, Sale, Settlement, DailyWithdrawal } from '../
 
 // Check if Supabase is properly configured
 const isSupabaseConfigured = () => {
-  const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  return url && key && url !== 'your_supabase_url_here' && key !== 'your_supabase_anon_key_here';
+  const envUrl = import.meta.env.VITE_SUPABASE_URL;
+  const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const localUrl = localStorage.getItem('supabase_url');
+  const localKey = localStorage.getItem('supabase_key');
+  
+  return (envUrl && envKey && envUrl !== 'your_supabase_url_here' && envKey !== 'your_supabase_anon_key_here') ||
+         (localUrl && localKey) ||
+         (supabase !== null);
 };
 
 // Handle database errors
