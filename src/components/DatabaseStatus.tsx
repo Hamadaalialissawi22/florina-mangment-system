@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Database, AlertCircle, CheckCircle, Wifi, WifiOff } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Database, AlertCircle, CheckCircle, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 const DatabaseStatus: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -16,23 +16,41 @@ const DatabaseStatus: React.FC = () => {
     setError(null);
     
     try {
-      // Try to fetch from a simple table to test connection
-      const { data, error } = await supabase
+      // First check if Supabase is configured
+      if (!isSupabaseConfigured()) {
+        setIsConnected(false);
+        setError('يرجى الاتصال بقاعدة البيانات Supabase أولاً');
+        return;
+      }
+
+      // Try to make a simple query to test connection
+      const { data, error: queryError } = await supabase!
         .from('products')
         .select('id')
         .limit(1);
       
-      if (error) {
-        throw error;
+      if (queryError) {
+        // Check for specific error types
+        if (queryError.message?.includes('relation "products" does not exist')) {
+          setError('جداول قاعدة البيانات غير موجودة. يرجى تشغيل المايجريشن أولاً.');
+        } else if (queryError.message?.includes('Invalid API key') || queryError.code === 'PGRST301') {
+          setError('مفتاح API غير صحيح. يرجى التحقق من إعدادات Supabase.');
+        } else if (queryError.message?.includes('Project not found') || queryError.code === 'PGRST000') {
+          setError('مشروع Supabase غير موجود. يرجى التحقق من الرابط.');
+        } else {
+          setError(`خطأ في الاتصال: ${queryError.message}`);
+        }
+        setIsConnected(false);
+      } else {
+        setIsConnected(true);
+        setError(null);
       }
-      
-      setIsConnected(true);
     } catch (err: any) {
       setIsConnected(false);
-      if (err.message?.includes('Invalid API key') || err.message?.includes('Project not found')) {
-        setError('يرجى الاتصال بقاعدة البيانات Supabase أولاً');
+      if (err.message?.includes('Failed to fetch')) {
+        setError('فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت.');
       } else {
-        setError('خطأ في الاتصال بقاعدة البيانات');
+        setError(`خطأ في الاتصال: ${err.message}`);
       }
     } finally {
       setIsChecking(false);
@@ -43,7 +61,7 @@ const DatabaseStatus: React.FC = () => {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Database className="w-5 h-5 text-blue-600 animate-pulse" />
+          <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
           <span className="text-blue-800">جاري فحص الاتصال بقاعدة البيانات...</span>
         </div>
       </div>
@@ -54,25 +72,34 @@ const DatabaseStatus: React.FC = () => {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
         <div className="flex items-start space-x-3 space-x-reverse">
-          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <h3 className="text-red-800 font-medium mb-2">قاعدة البيانات غير متصلة</h3>
+            <h3 className="text-red-800 font-medium mb-2 flex items-center space-x-2 space-x-reverse">
+              <WifiOff className="w-4 h-4" />
+              <span>قاعدة البيانات غير متصلة</span>
+            </h3>
             <p className="text-red-700 text-sm mb-3">
               {error || 'لا يمكن الاتصال بقاعدة البيانات. البيانات لن يتم حفظها.'}
             </p>
-            <div className="bg-red-100 rounded-lg p-3 mb-3">
-              <h4 className="font-medium text-red-800 mb-2">خطوات الحل:</h4>
-              <ol className="text-sm text-red-700 space-y-1">
-                <li>1. انقر على زر "Connect to Supabase" في أعلى الصفحة</li>
-                <li>2. أدخل بيانات مشروع Supabase الخاص بك</li>
-                <li>3. تأكد من صحة الـ URL والـ API Key</li>
-              </ol>
-            </div>
+            
+            {!isSupabaseConfigured() && (
+              <div className="bg-red-100 rounded-lg p-3 mb-3">
+                <h4 className="font-medium text-red-800 mb-2">خطوات الحل:</h4>
+                <ol className="text-sm text-red-700 space-y-1">
+                  <li>1. انقر على زر "Connect to Supabase" في أعلى الصفحة</li>
+                  <li>2. أنشئ مشروع جديد على <a href="https://supabase.com" target="_blank" className="underline">supabase.com</a></li>
+                  <li>3. انسخ الـ Project URL والـ API Key من إعدادات المشروع</li>
+                  <li>4. الصقهما في النموذج واضغط "اتصال"</li>
+                </ol>
+              </div>
+            )}
+            
             <button
               onClick={checkConnection}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center space-x-2 space-x-reverse"
             >
-              إعادة المحاولة
+              <RefreshCw className="w-4 h-4" />
+              <span>إعادة المحاولة</span>
             </button>
           </div>
         </div>
@@ -84,8 +111,9 @@ const DatabaseStatus: React.FC = () => {
     <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-6">
       <div className="flex items-center space-x-3 space-x-reverse">
         <CheckCircle className="w-5 h-5 text-emerald-600" />
-        <span className="text-emerald-800">متصل بقاعدة البيانات - البيانات يتم حفظها بنجاح</span>
+        <span className="text-emerald-800 font-medium">متصل بقاعدة البيانات</span>
         <Wifi className="w-4 h-4 text-emerald-600" />
+        <span className="text-emerald-700 text-sm">البيانات يتم حفظها بنجاح</span>
       </div>
     </div>
   );

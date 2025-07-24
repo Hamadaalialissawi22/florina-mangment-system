@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { LogOut, Coffee, Users, Store, FileText, Settings, Calculator, ShoppingCart } from 'lucide-react';
 import NotificationSystem from './NotificationSystem';
 import SupabaseConnector from './SupabaseConnector';
@@ -17,22 +18,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
 
   React.useEffect(() => {
     // Check if Supabase is already configured
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const localUrl = localStorage.getItem('supabase_url');
-    const localKey = localStorage.getItem('supabase_key');
-    
-    setIsSupabaseConnected(
-      (url && key && url !== 'your_supabase_url_here' && key !== 'your_supabase_anon_key_here') ||
-      (localUrl && localKey)
-    );
+    setIsSupabaseConnected(isSupabaseConfigured());
   }, []);
 
   const handleSupabaseConnect = (url: string, key: string) => {
-    // In a real app, this would update the environment variables
-    // For now, we'll just update the local state
     setIsSupabaseConnected(true);
-    window.location.reload(); // Reload to apply new connection
+    // The page will reload automatically from updateSupabaseConfig
   };
 
   const navItems = [
