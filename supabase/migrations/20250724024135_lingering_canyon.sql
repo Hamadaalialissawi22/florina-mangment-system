@@ -1,18 +1,18 @@
 /*
-  # إنشاء جدول المحلات المجاورة
+  # إنشاء جدول المحلات
 
   1. الجداول الجديدة
     - `stores`
       - `id` (uuid, primary key)
       - `name` (text)
       - `contact_person` (text)
-      - `phone` (text, optional)
+      - `phone` (text)
       - `is_active` (boolean)
       - `created_at` (timestamp)
-  
+
   2. الأمان
     - تفعيل RLS على جدول `stores`
-    - إضافة سياسات للقراءة والكتابة
+    - إضافة سياسات للقراءة والإدارة
 */
 
 CREATE TABLE IF NOT EXISTS stores (
@@ -38,14 +38,8 @@ CREATE POLICY "Managers can manage stores"
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role IN ('admin', 'manager')
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email IN ('admin@florina.com', 'manager@florina.com')
     )
   );
-
--- إدراج بيانات تجريبية
-INSERT INTO stores (name, contact_person, phone) VALUES
-('محل النور', 'أحمد النوري', '0501234567'),
-('محل الفردوس', 'محمد الفردوسي', '0507654321'),
-('محل الأمل', 'فاطمة الأملي', '0509876543'),
-('محل الياسمين', 'علي الياسميني', '0505555555');

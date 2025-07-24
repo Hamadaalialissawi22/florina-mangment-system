@@ -1,5 +1,5 @@
 /*
-  # إنشاء جدول المسحوبات اليومية
+  # إنشاء جدول السحوبات اليومية
 
   1. الجداول الجديدة
     - `daily_withdrawals`
@@ -8,14 +8,14 @@
       - `customer_id` (uuid)
       - `product_id` (uuid, foreign key)
       - `quantity` (integer)
-      - `unit_price` (decimal)
-      - `total_amount` (decimal)
+      - `unit_price` (numeric)
+      - `total_amount` (numeric)
       - `date` (date)
       - `created_at` (timestamp)
-  
+
   2. الأمان
     - تفعيل RLS على جدول `daily_withdrawals`
-    - إضافة سياسات للقراءة والكتابة
+    - إضافة سياسات للقراءة والإنشاء
 */
 
 CREATE TABLE IF NOT EXISTS daily_withdrawals (
@@ -24,25 +24,27 @@ CREATE TABLE IF NOT EXISTS daily_withdrawals (
   customer_id uuid NOT NULL,
   product_id uuid NOT NULL REFERENCES products(id),
   quantity integer NOT NULL DEFAULT 1,
-  unit_price decimal(10,2) NOT NULL,
-  total_amount decimal(10,2) NOT NULL,
+  unit_price numeric(10,2) NOT NULL,
+  total_amount numeric(10,2) NOT NULL,
   date date DEFAULT CURRENT_DATE,
   created_at timestamptz DEFAULT now()
 );
+
+-- إنشاء فهارس للأداء
+CREATE INDEX IF NOT EXISTS idx_withdrawals_customer ON daily_withdrawals(customer_type, customer_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_product_id ON daily_withdrawals(product_id);
+CREATE INDEX IF NOT EXISTS idx_withdrawals_date ON daily_withdrawals(date);
 
 ALTER TABLE daily_withdrawals ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Anyone can read withdrawals"
   ON daily_withdrawals
   FOR SELECT
-  TO authenticated;
+  TO authenticated
+  USING (true);
 
 CREATE POLICY "Anyone can create withdrawals"
   ON daily_withdrawals
   FOR INSERT
-  TO authenticated;
-
--- إنشاء فهارس للأداء
-CREATE INDEX IF NOT EXISTS idx_withdrawals_customer ON daily_withdrawals(customer_type, customer_id);
-CREATE INDEX IF NOT EXISTS idx_withdrawals_date ON daily_withdrawals(date);
-CREATE INDEX IF NOT EXISTS idx_withdrawals_product_id ON daily_withdrawals(product_id);
+  TO authenticated
+  WITH CHECK (true);

@@ -8,10 +8,10 @@
       - `name` (text)
       - `role` (text)
       - `created_at` (timestamp)
-  
+
   2. الأمان
     - تفعيل RLS على جدول `users`
-    - إضافة سياسة للمستخدمين المصرح لهم لقراءة بياناتهم الخاصة
+    - إضافة سياسات للقراءة والإدارة
 */
 
 CREATE TABLE IF NOT EXISTS users (
@@ -36,7 +36,8 @@ CREATE POLICY "Admins can manage all users"
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role = 'admin'
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email IN ('admin@florina.com', 'manager@florina.com')
     )
   );

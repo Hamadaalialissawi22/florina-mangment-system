@@ -9,10 +9,10 @@
       - `billing_cycle` (text)
       - `is_active` (boolean)
       - `created_at` (timestamp)
-  
+
   2. الأمان
     - تفعيل RLS على جدول `employees`
-    - إضافة سياسات للقراءة والكتابة
+    - إضافة سياسات للقراءة والإدارة
 */
 
 CREATE TABLE IF NOT EXISTS employees (
@@ -38,15 +38,8 @@ CREATE POLICY "Managers can manage employees"
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = auth.uid() AND role IN ('admin', 'manager')
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.email IN ('admin@florina.com', 'manager@florina.com')
     )
   );
-
--- إدراج بيانات تجريبية
-INSERT INTO employees (name, department, billing_cycle) VALUES
-('أحمد محمد', 'المحاسبة', 'monthly'),
-('فاطمة أحمد', 'خدمة العملاء', 'daily'),
-('محمد علي', 'الأمن', 'daily'),
-('سارة أحمد', 'الإدارة', 'monthly'),
-('خالد محمد', 'التنظيف', 'daily');
