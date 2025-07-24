@@ -18,7 +18,7 @@ const handleDatabaseError = (error: any, operation: string) => {
   }
 
   if (error?.message?.includes('relation') && error?.message?.includes('does not exist')) {
-    throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل المايجريشن أولاً.');
+    throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن في Supabase SQL Editor.');
   }
   
   throw new Error(`خطأ في ${operation}: ${error?.message || 'خطأ غير معروف'}`);

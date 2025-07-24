@@ -6,30 +6,28 @@
       - `id` (uuid, primary key)
       - `email` (text, unique)
       - `name` (text)
-      - `role` (text)
+      - `role` (text) - admin, manager, employee
       - `created_at` (timestamp)
 
   2. الأمان
     - تفعيل RLS على جدول `users`
-    - إضافة سياسات للقراءة والإدارة
+    - سياسة للمدراء لإدارة جميع المستخدمين
+    - سياسة للمستخدمين لقراءة بياناتهم الخاصة
 */
 
+-- إنشاء جدول المستخدمين
 CREATE TABLE IF NOT EXISTS users (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   email text UNIQUE NOT NULL,
-  name text NOT NULL DEFAULT '',
-  role text NOT NULL DEFAULT 'employee' CHECK (role IN ('admin', 'manager', 'employee')),
+  name text DEFAULT '',
+  role text DEFAULT 'employee' CHECK (role IN ('admin', 'manager', 'employee')),
   created_at timestamptz DEFAULT now()
 );
 
+-- تفعيل RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own data"
-  ON users
-  FOR SELECT
-  TO authenticated
-  USING (auth.uid() = id);
-
+-- سياسات الأمان
 CREATE POLICY "Admins can manage all users"
   ON users
   FOR ALL
@@ -41,3 +39,9 @@ CREATE POLICY "Admins can manage all users"
       AND auth.users.email IN ('admin@florina.com', 'manager@florina.com')
     )
   );
+
+CREATE POLICY "Users can read own data"
+  ON users
+  FOR SELECT
+  TO authenticated
+  USING (auth.uid() = id);

@@ -37,6 +37,8 @@ const DatabaseStatus: React.FC = () => {
           setError('مفتاح API غير صحيح. يرجى التحقق من إعدادات Supabase.');
         } else if (queryError.message?.includes('Project not found') || queryError.code === 'PGRST000') {
           setError('مشروع Supabase غير موجود. يرجى التحقق من الرابط.');
+        } else if (queryError.message?.includes('relation') && queryError.message?.includes('does not exist')) {
+          setError('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن.');
         } else {
           setError(`خطأ في الاتصال: ${queryError.message}`);
         }
@@ -90,6 +92,19 @@ const DatabaseStatus: React.FC = () => {
                   <li>2. أنشئ مشروع جديد على <a href="https://supabase.com" target="_blank" className="underline">supabase.com</a></li>
                   <li>3. انسخ الـ Project URL والـ API Key من إعدادات المشروع</li>
                   <li>4. الصقهما في النموذج واضغط "اتصال"</li>
+                </ol>
+              </div>
+            )}
+            
+            {isSupabaseConfigured() && error?.includes('جداول قاعدة البيانات غير موجودة') && (
+              <div className="bg-red-100 rounded-lg p-3 mb-3">
+                <h4 className="font-medium text-red-800 mb-2">خطوات إنشاء الجداول:</h4>
+                <ol className="text-sm text-red-700 space-y-1">
+                  <li>1. اذهب إلى لوحة تحكم Supabase الخاصة بك</li>
+                  <li>2. انقر على "SQL Editor" في القائمة الجانبية</li>
+                  <li>3. انسخ محتوى ملفات المايجريشن من مجلد supabase/migrations</li>
+                  <li>4. الصق كل ملف وشغله بالترتيب (001, 002, 003...)</li>
+                  <li>5. أو استخدم Supabase CLI لتشغيل المايجريشن تلقائياً</li>
                 </ol>
               </div>
             )}
