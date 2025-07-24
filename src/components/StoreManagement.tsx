@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Store as StoreIcon, Phone, User } from 'lucide-react';
 import { Store } from '../types';
+import { getStores, createStore, updateStore, deleteStore } from '../lib/database';
+import LoadingSpinner from './LoadingSpinner';
 
 const StoreManagement: React.FC = () => {
   const [stores, setStores] = useState<Store[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingStore, setEditingStore] = useState<Store | null>(null);
   const [formData, setFormData] = useState({
@@ -17,60 +20,39 @@ const StoreManagement: React.FC = () => {
   }, []);
 
   const loadStores = async () => {
-    // Mock data - would be replaced with Supabase query
-    const mockStores: Store[] = [
-      {
-        id: '1',
-        name: 'محل النور',
-        contact_person: 'أحمد النوري',
-        phone: '0501234567',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        name: 'محل الفردوس',
-        contact_person: 'محمد الفردوسي',
-        phone: '0507654321',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        name: 'محل الأمل',
-        contact_person: 'فاطمة الأملي',
-        phone: '0509876543',
-        is_active: false,
-        created_at: new Date().toISOString(),
-      },
-    ];
-    setStores(mockStores);
+    try {
+      setLoading(true);
+      const data = await getStores();
+      setStores(data);
+    } catch (error) {
+      console.error('Error loading stores:', error);
+      alert('حدث خطأ في تحميل المحلات');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingStore) {
-      // Update existing store
-      setStores(stores.map(store => 
-        store.id === editingStore.id 
-          ? { ...store, ...formData }
-          : store
-      ));
-    } else {
-      // Add new store
-      const newStore: Store = {
-        id: Date.now().toString(),
-        ...formData,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
-      setStores([...stores, newStore]);
+    setLoading(true);
+    try {
+      if (editingStore) {
+        await updateStore(editingStore.id, formData);
+      } else {
+        await createStore(formData);
+      }
+      
+      await loadStores();
+      setShowForm(false);
+      setEditingStore(null);
+      setFormData({ name: '', contact_person: '', phone: '' });
+    } catch (error) {
+      console.error('Error saving store:', error);
+      alert('حدث خطأ في حفظ المحل');
+    } finally {
+      setLoading(false);
     }
-
-    setShowForm(false);
-    setEditingStore(null);
-    setFormData({ name: '', contact_person: '', phone: '' });
   };
 
   const handleEdit = (store: Store) => {
@@ -85,18 +67,36 @@ const StoreManagement: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('هل تريد حذف هذا المحل؟')) {
-      setStores(stores.filter(store => store.id !== id));
+      try {
+        setLoading(true);
+        await deleteStore(id);
+        await loadStores();
+      } catch (error) {
+        console.error('Error deleting store:', error);
+        alert('حدث خطأ في حذف المحل');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const toggleStatus = async (id: string) => {
-    setStores(stores.map(store => 
-      store.id === id ? { ...store, is_active: !store.is_active } : store
-    ));
+  const toggleStatus = async (store: Store) => {
+    try {
+      setLoading(true);
+      await updateStore(store.id, { is_active: !store.is_active });
+      await loadStores();
+    } catch (error) {
+      console.error('Error updating store status:', error);
+      alert('حدث خطأ في تحديث حالة المحل');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6">
+      {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة المحلات المجاورة</h1>
         <button
@@ -155,6 +155,7 @@ const StoreManagement: React.FC = () => {
               <div className="flex space-x-3 space-x-reverse pt-4">
                 <button
                   type="submit"
+                  disabled={loading}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   {editingStore ? 'تحديث' : 'إضافة'}
@@ -220,7 +221,7 @@ const StoreManagement: React.FC = () => {
             </div>
 
             <button
-              onClick={() => toggleStatus(store.id)}
+              onClick={() => toggleStatus(store)}
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
                 store.is_active
                   ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'

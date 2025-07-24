@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Calculator } from 'lucide-react';
 import { Product } from '../types';
+import { getProducts, getStores, getEmployees, createSale } from '../lib/database';
+import { useAuth } from '../contexts/AuthContext';
 import SearchBar from './SearchBar';
 import LoadingSpinner from './LoadingSpinner';
 import ConfirmDialog from './ConfirmDialog';
@@ -13,7 +15,10 @@ interface CartItem {
 }
 
 const SalesSystem: React.FC = () => {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
+  const [stores, setStores] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerType, setCustomerType] = useState<'regular' | 'store' | 'employee'>('regular');
   const [selectedCustomer, setSelectedCustomer] = useState('');
@@ -21,73 +26,37 @@ const SalesSystem: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Mock data for stores and employees
-  const stores = [
-    { id: '1', name: 'محل النور' },
-    { id: '2', name: 'محل الفردوس' },
-    { id: '3', name: 'محل الأمل' },
-  ];
-
-  const employees = [
-    { id: '1', name: 'أحمد محمد' },
-    { id: '2', name: 'فاطمة أحمد' },
-    { id: '3', name: 'محمد علي' },
-  ];
-
   useEffect(() => {
     loadProducts();
+    loadStores();
+    loadEmployees();
   }, []);
 
   const loadProducts = async () => {
-    // Mock data - would be replaced with Supabase query
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: 'قهوة أمريكانو',
-        regular_price: 15,
-        store_price: 12,
-        employee_price: 10,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        name: 'كابتشينو',
-        regular_price: 18,
-        store_price: 15,
-        employee_price: 12,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        name: 'لاتيه',
-        regular_price: 20,
-        store_price: 17,
-        employee_price: 14,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '4',
-        name: 'شاي أحمر',
-        regular_price: 8,
-        store_price: 6,
-        employee_price: 5,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '5',
-        name: 'شاي أخضر',
-        regular_price: 10,
-        store_price: 8,
-        employee_price: 6,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    ];
-    setProducts(mockProducts);
+    try {
+      const data = await getProducts();
+      setProducts(data.filter(p => p.is_active));
+    } catch (error) {
+      console.error('Error loading products:', error);
+    }
+  };
+
+  const loadStores = async () => {
+    try {
+      const data = await getStores();
+      setStores(data.filter(s => s.is_active));
+    } catch (error) {
+      console.error('Error loading stores:', error);
+    }
+  };
+
+  const loadEmployees = async () => {
+    try {
+      const data = await getEmployees();
+      setEmployees(data.filter(e => e.is_active));
+    } catch (error) {
+      console.error('Error loading employees:', error);
+    }
   };
 
   const getPrice = (product: Product, type: string) => {
@@ -158,11 +127,20 @@ const SalesSystem: React.FC = () => {
   const confirmCheckout = async () => {
     setLoading(true);
     try {
-      // Process the sale
-      console.log('Processing sale:', cart);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user) throw new Error('User not authenticated');
+
+      // Create sales records
+      for (const item of cart) {
+        await createSale({
+          product_id: item.product.id,
+          customer_type: item.customerType,
+          customer_id: item.customerId,
+          quantity: item.quantity,
+          unit_price: getPrice(item.product, item.customerType),
+          total_amount: getPrice(item.product, item.customerType) * item.quantity,
+          processed_by: user.id,
+        });
+      }
       
       // Clear cart after successful sale
       setCart([]);

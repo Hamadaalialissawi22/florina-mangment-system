@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Users, Store, Coffee, DollarSign } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { getDashboardStats } from '../lib/database';
 import QuickActions from './QuickActions';
 
 const Dashboard: React.FC = () => {
@@ -57,15 +57,8 @@ const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      // This would fetch real data from Supabase
-      // For now, using mock data
-      setStats({
-        dailySales: 3420,
-        monthlySales: 82500,
-        activeEmployees: 24,
-        activeStores: 8,
-        totalProducts: 35,
-      });
+      const data = await getDashboardStats();
+      setStats(data);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }

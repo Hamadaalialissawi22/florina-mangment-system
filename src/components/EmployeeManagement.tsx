@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Users, Calendar, DollarSign } from 'lucide-react';
 import { Employee } from '../types';
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '../lib/database';
+import LoadingSpinner from './LoadingSpinner';
 
 const EmployeeManagement: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
@@ -17,60 +20,39 @@ const EmployeeManagement: React.FC = () => {
   }, []);
 
   const loadEmployees = async () => {
-    // Mock data - would be replaced with Supabase query
-    const mockEmployees: Employee[] = [
-      {
-        id: '1',
-        name: 'أحمد محمد',
-        department: 'المحاسبة',
-        billing_cycle: 'monthly',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        name: 'فاطمة أحمد',
-        department: 'خدمة العملاء',
-        billing_cycle: 'daily',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        name: 'محمد علي',
-        department: 'الأمن',
-        billing_cycle: 'daily',
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    ];
-    setEmployees(mockEmployees);
+    try {
+      setLoading(true);
+      const data = await getEmployees();
+      setEmployees(data);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      alert('حدث خطأ في تحميل الموظفين');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingEmployee) {
-      // Update existing employee
-      setEmployees(employees.map(emp => 
-        emp.id === editingEmployee.id 
-          ? { ...emp, ...formData }
-          : emp
-      ));
-    } else {
-      // Add new employee
-      const newEmployee: Employee = {
-        id: Date.now().toString(),
-        ...formData,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
-      setEmployees([...employees, newEmployee]);
+    setLoading(true);
+    try {
+      if (editingEmployee) {
+        await updateEmployee(editingEmployee.id, formData);
+      } else {
+        await createEmployee(formData);
+      }
+      
+      await loadEmployees();
+      setShowForm(false);
+      setEditingEmployee(null);
+      setFormData({ name: '', department: '', billing_cycle: 'daily' });
+    } catch (error) {
+      console.error('Error saving employee:', error);
+      alert('حدث خطأ في حفظ الموظف');
+    } finally {
+      setLoading(false);
     }
-
-    setShowForm(false);
-    setEditingEmployee(null);
-    setFormData({ name: '', department: '', billing_cycle: 'daily' });
   };
 
   const handleEdit = (employee: Employee) => {
@@ -85,18 +67,36 @@ const EmployeeManagement: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (window.confirm('هل تريد حذف هذا الموظف؟')) {
-      setEmployees(employees.filter(emp => emp.id !== id));
+      try {
+        setLoading(true);
+        await deleteEmployee(id);
+        await loadEmployees();
+      } catch (error) {
+        console.error('Error deleting employee:', error);
+        alert('حدث خطأ في حذف الموظف');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
-  const toggleStatus = async (id: string) => {
-    setEmployees(employees.map(emp => 
-      emp.id === id ? { ...emp, is_active: !emp.is_active } : emp
-    ));
+  const toggleStatus = async (employee: Employee) => {
+    try {
+      setLoading(true);
+      await updateEmployee(employee.id, { is_active: !employee.is_active });
+      await loadEmployees();
+    } catch (error) {
+      console.error('Error updating employee status:', error);
+      alert('حدث خطأ في تحديث حالة الموظف');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="space-y-6">
+      {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة الموظفين</h1>
         <button
@@ -156,6 +156,7 @@ const EmployeeManagement: React.FC = () => {
               <div className="flex space-x-3 space-x-reverse pt-4">
                 <button
                   type="submit"
+                  disabled={loading}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   {editingEmployee ? 'تحديث' : 'إضافة'}
@@ -225,7 +226,7 @@ const EmployeeManagement: React.FC = () => {
             </div>
 
             <button
-              onClick={() => toggleStatus(employee.id)}
+              onClick={() => toggleStatus(employee)}
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
                 employee.is_active
                   ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'

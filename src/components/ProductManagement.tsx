@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Coffee } from 'lucide-react';
 import { Product } from '../types';
+import { getProducts, createProduct, updateProduct, deleteProduct } from '../lib/database';
 import SearchBar from './SearchBar';
 import ConfirmDialog from './ConfirmDialog';
+import LoadingSpinner from './LoadingSpinner';
 
 const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,42 +29,22 @@ const ProductManagement: React.FC = () => {
   }, []);
 
   const loadProducts = async () => {
-    // Mock data - would be replaced with Supabase query
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: 'قهوة أمريكانو',
-        regular_price: 15,
-        store_price: 12,
-        employee_price: 10,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        name: 'كابتشينو',
-        regular_price: 18,
-        store_price: 15,
-        employee_price: 12,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        name: 'لاتيه',
-        regular_price: 20,
-        store_price: 17,
-        employee_price: 14,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      },
-    ];
-    setProducts(mockProducts);
+    try {
+      setLoading(true);
+      const data = await getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      alert('حدث خطأ في تحميل المنتجات');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    setLoading(true);
     const productData = {
       name: formData.name,
       regular_price: parseFloat(formData.regular_price),
@@ -69,27 +52,23 @@ const ProductManagement: React.FC = () => {
       employee_price: parseFloat(formData.employee_price),
     };
 
-    if (editingProduct) {
-      // Update existing product
-      setProducts(products.map(p => 
-        p.id === editingProduct.id 
-          ? { ...p, ...productData }
-          : p
-      ));
-    } else {
-      // Add new product
-      const newProduct: Product = {
-        id: Date.now().toString(),
-        ...productData,
-        is_active: true,
-        created_at: new Date().toISOString(),
-      };
-      setProducts([...products, newProduct]);
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+      } else {
+        await createProduct(productData);
+      }
+      
+      await loadProducts();
+      setShowForm(false);
+      setEditingProduct(null);
+      setFormData({ name: '', regular_price: '', store_price: '', employee_price: '' });
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('حدث خطأ في حفظ المنتج');
+    } finally {
+      setLoading(false);
     }
-
-    setShowForm(false);
-    setEditingProduct(null);
-    setFormData({ name: '', regular_price: '', store_price: '', employee_price: '' });
   };
 
   const handleEdit = (product: Product) => {
@@ -114,15 +93,31 @@ const ProductManagement: React.FC = () => {
     }
   };
 
-  const confirmDelete = () => {
-    setProducts(products.filter(p => p.id !== confirmDialog.productId));
-    setConfirmDialog({ isOpen: false, productId: '', productName: '' });
+  const confirmDelete = async () => {
+    try {
+      setLoading(true);
+      await deleteProduct(confirmDialog.productId);
+      await loadProducts();
+      setConfirmDialog({ isOpen: false, productId: '', productName: '' });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      alert('حدث خطأ في حذف المنتج');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const toggleStatus = async (id: string) => {
-    setProducts(products.map(p => 
-      p.id === id ? { ...p, is_active: !p.is_active } : p
-    ));
+  const toggleStatus = async (product: Product) => {
+    try {
+      setLoading(true);
+      await updateProduct(product.id, { is_active: !product.is_active });
+      await loadProducts();
+    } catch (error) {
+      console.error('Error updating product status:', error);
+      alert('حدث خطأ في تحديث حالة المنتج');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredProducts = products.filter(product =>
@@ -130,6 +125,8 @@ const ProductManagement: React.FC = () => {
   );
   return (
     <div className="space-y-6">
+      {loading && <LoadingSpinner fullScreen message="جاري معالجة البيانات..." />}
+      
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">إدارة المنتجات</h1>
         <button
@@ -224,6 +221,7 @@ const ProductManagement: React.FC = () => {
               <div className="flex space-x-3 space-x-reverse pt-4">
                 <button
                   type="submit"
+                  disabled={loading}
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   {editingProduct ? 'تحديث' : 'إضافة'}
@@ -292,6 +290,7 @@ const ProductManagement: React.FC = () => {
 
             <button
               onClick={() => toggleStatus(product.id)}
+              onClick={() => toggleStatus(product)}
               className={`w-full py-2 px-4 rounded-lg transition-colors ${
                 product.is_active
                   ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
