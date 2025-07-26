@@ -73,6 +73,20 @@ export const getCurrentUser = async () => {
 export const updateSupabaseConfig = (url: string, key: string) => {
   localStorage.setItem('supabase_url', url);
   localStorage.setItem('supabase_key', key);
+  
+  // Set the schema search path for the new connection
+  if (supabase) {
+    supabase.rpc('set_config', {
+      setting_name: 'search_path',
+      new_value: 'florina, public',
+      is_local: false
+    }).then(() => {
+      console.log('Schema search path updated');
+    }).catch(err => {
+      console.warn('Could not set search path:', err);
+    });
+  }
+  
   // Reload the page to apply new configuration
   window.location.reload();
 };

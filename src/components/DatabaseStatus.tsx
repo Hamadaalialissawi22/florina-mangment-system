@@ -25,13 +25,15 @@ const DatabaseStatus: React.FC = () => {
 
       // Try to make a simple query to test connection
       const { data, error: queryError } = await supabase!
-        .from('products')
+        .from('florina.products')
         .select('id')
         .limit(1);
       
       if (queryError) {
         // Check for specific error types
-        if (queryError.message?.includes('relation "products" does not exist')) {
+        if (queryError.message?.includes('relation "florina.products" does not exist')) {
+          setError('جداول قاعدة البيانات الجديدة غير موجودة. يرجى تشغيل ملفات المايجريشن الجديدة.');
+        } else if (queryError.message?.includes('relation "products" does not exist')) {
           setError('جداول قاعدة البيانات غير موجودة. يرجى تشغيل المايجريشن أولاً.');
         } else if (queryError.message?.includes('Invalid API key') || queryError.code === 'PGRST301') {
           setError('مفتاح API غير صحيح. يرجى التحقق من إعدادات Supabase.');
@@ -96,15 +98,19 @@ const DatabaseStatus: React.FC = () => {
               </div>
             )}
             
-            {isSupabaseConfigured() && error?.includes('جداول قاعدة البيانات غير موجودة') && (
+            {isSupabaseConfigured() && (error?.includes('جداول قاعدة البيانات غير موجودة') || error?.includes('جداول قاعدة البيانات الجديدة غير موجودة')) && (
               <div className="bg-red-100 rounded-lg p-3 mb-3">
-                <h4 className="font-medium text-red-800 mb-2">خطوات إنشاء الجداول:</h4>
+                <h4 className="font-medium text-red-800 mb-2">خطوات إنشاء الجداول الجديدة:</h4>
                 <ol className="text-sm text-red-700 space-y-1">
                   <li>1. اذهب إلى لوحة تحكم Supabase الخاصة بك</li>
                   <li>2. انقر على "SQL Editor" في القائمة الجانبية</li>
-                  <li>3. انسخ محتوى ملفات المايجريشن من مجلد supabase/migrations</li>
-                  <li>4. الصق كل ملف وشغله بالترتيب (001, 002, 003...)</li>
-                  <li>5. أو استخدم Supabase CLI لتشغيل المايجريشن تلقائياً</li>
+                  <li>3. انسخ محتوى ملفات المايجريشن الجديدة من مجلد database/schema</li>
+                  <li>4. الصق وشغل الملفات بالترتيب:</li>
+                  <li className="mr-4">• 01_create_database_structure.sql</li>
+                  <li className="mr-4">• 02_create_functions_and_triggers.sql</li>
+                  <li className="mr-4">• 03_create_views.sql</li>
+                  <li className="mr-4">• 04_create_security_policies.sql</li>
+                  <li className="mr-4">• 01_insert_sample_data.sql (من مجلد data)</li>
                 </ol>
               </div>
             )}

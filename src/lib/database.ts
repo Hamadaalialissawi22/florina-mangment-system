@@ -18,7 +18,11 @@ const handleDatabaseError = (error: any, operation: string) => {
   }
 
   if (error?.message?.includes('relation') && error?.message?.includes('does not exist')) {
-    throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن في Supabase SQL Editor.');
+    if (error?.message?.includes('florina.')) {
+      throw new Error('جداول قاعدة البيانات غير موجودة في schema florina. يرجى تشغيل ملفات المايجريشن الجديدة.');
+    } else {
+      throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن في Supabase SQL Editor.');
+    }
   }
   
   throw new Error(`خطأ في ${operation}: ${error?.message || 'خطأ غير معروف'}`);
@@ -53,7 +57,7 @@ export const getProducts = async (): Promise<Product[]> => {
 
   try {
     const { data, error } = await supabase!
-      .from('products')
+      .from('florina.products')
       .select('*')
       .order('name');
     
@@ -72,7 +76,7 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at'>)
 
   try {
     const { data, error } = await supabase!
-      .from('products')
+      .from('florina.products')
       .insert([{ ...product, is_active: true }])
       .select()
       .single();
@@ -92,7 +96,7 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
 
   try {
     const { data, error } = await supabase!
-      .from('products')
+      .from('florina.products')
       .update(updates)
       .eq('id', id)
       .select()
@@ -113,7 +117,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
   try {
     const { error } = await supabase!
-      .from('products')
+      .from('florina.products')
       .delete()
       .eq('id', id);
     
@@ -132,7 +136,7 @@ export const getStores = async (): Promise<Store[]> => {
 
   try {
     const { data, error } = await supabase!
-      .from('stores')
+      .from('florina.stores')
       .select('*')
       .order('name');
     
@@ -151,7 +155,7 @@ export const createStore = async (store: Omit<Store, 'id' | 'created_at'>): Prom
 
   try {
     const { data, error } = await supabase!
-      .from('stores')
+      .from('florina.stores')
       .insert([{ ...store, is_active: true }])
       .select()
       .single();
@@ -171,7 +175,7 @@ export const updateStore = async (id: string, updates: Partial<Store>): Promise<
 
   try {
     const { data, error } = await supabase!
-      .from('stores')
+      .from('florina.stores')
       .update(updates)
       .eq('id', id)
       .select()
@@ -192,7 +196,7 @@ export const deleteStore = async (id: string): Promise<void> => {
 
   try {
     const { error } = await supabase!
-      .from('stores')
+      .from('florina.stores')
       .delete()
       .eq('id', id);
     
@@ -211,7 +215,7 @@ export const getEmployees = async (): Promise<Employee[]> => {
 
   try {
     const { data, error } = await supabase!
-      .from('employees')
+      .from('florina.employees')
       .select('*')
       .order('name');
     
@@ -230,7 +234,7 @@ export const createEmployee = async (employee: Omit<Employee, 'id' | 'created_at
 
   try {
     const { data, error } = await supabase!
-      .from('employees')
+      .from('florina.employees')
       .insert([{ ...employee, is_active: true }])
       .select()
       .single();
@@ -250,7 +254,7 @@ export const updateEmployee = async (id: string, updates: Partial<Employee>): Pr
 
   try {
     const { data, error } = await supabase!
-      .from('employees')
+      .from('florina.employees')
       .update(updates)
       .eq('id', id)
       .select()
@@ -271,7 +275,7 @@ export const deleteEmployee = async (id: string): Promise<void> => {
 
   try {
     const { error } = await supabase!
-      .from('employees')
+      .from('florina.employees')
       .delete()
       .eq('id', id);
     
@@ -290,7 +294,7 @@ export const createSale = async (sale: Omit<Sale, 'id' | 'created_at'>): Promise
 
   try {
     const { data, error } = await supabase!
-      .from('sales')
+      .from('florina.sales')
       .insert([sale])
       .select()
       .single();
@@ -310,12 +314,12 @@ export const getSales = async (startDate?: string, endDate?: string) => {
 
   try {
     let query = supabase!
-      .from('sales')
+      .from('florina.sales')
       .select(`
         *,
-        products (name),
-        stores (name),
-        employees (name)
+        florina.products (name),
+        florina.stores (name),
+        florina.employees (name)
       `)
       .order('created_at', { ascending: false });
 
@@ -353,11 +357,11 @@ export const getDashboardStats = async () => {
 
     // Get all stats in parallel
     const [dailySalesResult, monthlySalesResult, activeEmployeesResult, activeStoresResult, totalProductsResult] = await Promise.all([
-      supabase!.from('sales').select('total_amount').gte('created_at', today),
-      supabase!.from('sales').select('total_amount').gte('created_at', startOfMonth),
-      supabase!.from('employees').select('id').eq('is_active', true),
-      supabase!.from('stores').select('id').eq('is_active', true),
-      supabase!.from('products').select('id').eq('is_active', true)
+      supabase!.from('florina.sales').select('total_amount').gte('created_at', today),
+      supabase!.from('florina.sales').select('total_amount').gte('created_at', startOfMonth),
+      supabase!.from('florina.employees').select('id').eq('is_active', true),
+      supabase!.from('florina.stores').select('id').eq('is_active', true),
+      supabase!.from('florina.products').select('id').eq('is_active', true)
     ]);
 
     return {
@@ -387,7 +391,7 @@ export const createDailyWithdrawal = async (withdrawal: Omit<DailyWithdrawal, 'i
 
   try {
     const { data, error } = await supabase!
-      .from('daily_withdrawals')
+      .from('florina.daily_withdrawals')
       .insert([withdrawal])
       .select()
       .single();
@@ -407,10 +411,10 @@ export const getDailyWithdrawals = async (customerType?: string, customerId?: st
 
   try {
     let query = supabase!
-      .from('daily_withdrawals')
+      .from('florina.daily_withdrawals')
       .select(`
         *,
-        products (name)
+        florina.products (name)
       `)
       .order('created_at', { ascending: false });
 
@@ -441,7 +445,7 @@ export const createSettlement = async (settlement: Omit<Settlement, 'id' | 'crea
 
   try {
     const { data, error } = await supabase!
-      .from('settlements')
+      .from('florina.settlements')
       .insert([settlement])
       .select()
       .single();
@@ -461,7 +465,7 @@ export const getSettlements = async (customerType?: string, customerId?: string)
 
   try {
     let query = supabase!
-      .from('settlements')
+      .from('florina.settlements')
       .select('*')
       .order('created_at', { ascending: false });
 
