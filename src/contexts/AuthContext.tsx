@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // For demo purposes, create a mock user when Supabase is not configured
       setUser({
         id: 'demo-user',
-        email: 'demo@florina.com',
+        email: 'florinacafe@gmail.com',
         created_at: new Date().toISOString(),
         app_metadata: {},
         user_metadata: {},
@@ -78,8 +78,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     if (!isSupabaseConfigured()) {
       // Mock sign in for demo
-      if (email === 'admin@florina.com' && password === 'admin123') {
+      if (email === 'florinacafe@gmail.com' && password === '123456789@@f') {
         return { data: { user: user }, error: null };
+      } else if (email === 'manager@florinacafe.com' && password === 'manager123') {
+        return { data: { user: { ...user, email: 'manager@florinacafe.com' } }, error: null };
+      } else if (email === 'cashier@florinacafe.com' && password === 'cashier123') {
+        return { data: { user: { ...user, email: 'cashier@florinacafe.com' } }, error: null };
       } else {
         return { data: null, error: { message: 'Invalid credentials' } };
       }

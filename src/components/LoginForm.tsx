@@ -49,7 +49,7 @@ const LoginForm: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="أدخل البريد الإلكتروني"
+              placeholder="florinacafe@gmail.com"
               required
             />
           </div>
@@ -64,7 +64,7 @@ const LoginForm: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              placeholder="أدخل كلمة المرور"
+              placeholder="123456789@@f"
               required
             />
           </div>

@@ -94,6 +94,7 @@ const DatabaseStatus: React.FC = () => {
                   <li>2. أنشئ مشروع جديد على <a href="https://supabase.com" target="_blank" className="underline">supabase.com</a></li>
                   <li>3. انسخ الـ Project URL والـ API Key من إعدادات المشروع</li>
                   <li>4. الصقهما في النموذج واضغط "اتصال"</li>
+                  <li>5. شغل ملف إعداد المستخدم الإداري: database/admin/setup_admin_user.sql</li>
                 </ol>
               </div>
             )}
@@ -111,6 +112,7 @@ const DatabaseStatus: React.FC = () => {
                   <li className="mr-4">• 03_create_views.sql</li>
                   <li className="mr-4">• 04_create_security_policies.sql</li>
                   <li className="mr-4">• 01_insert_sample_data.sql (من مجلد data)</li>
+                  <li className="mr-4">• setup_admin_user.sql (من مجلد admin)</li>
                 </ol>
               </div>
             )}

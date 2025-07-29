@@ -198,6 +198,10 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
                   <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">3</span>
                   <span>انسخ "anon public" key من قسم Project API keys</span>
                 </li>
+                <li className="flex items-start space-x-2 space-x-reverse">
+                  <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">4</span>
+                  <span>شغل ملف إعداد المستخدم الإداري من database/admin/setup_admin_user.sql</span>
+                </li>
               </ol>
             </div>
 
