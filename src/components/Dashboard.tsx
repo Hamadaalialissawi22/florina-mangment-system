@@ -5,7 +5,11 @@ import { getDashboardStats } from '../lib/database';
 import QuickActions from './QuickActions';
 import DatabaseStatus from './DatabaseStatus';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onTabChange?: (tab: string) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onTabChange }) => {
   const [stats, setStats] = useState({
     dailySales: 0,
     monthlySales: 0,
@@ -17,22 +21,22 @@ const Dashboard: React.FC = () => {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'new-sale':
-        // Navigate to sales system
+        onTabChange('sales');
         break;
       case 'settlement':
-        // Navigate to settlement system
+        onTabChange('settlements');
         break;
       case 'add-employee':
-        // Open employee form
+        onTabChange('employees');
         break;
       case 'add-store':
-        // Open store form
+        onTabChange('stores');
         break;
       case 'add-product':
-        // Open product form
+        onTabChange('products');
         break;
       case 'daily-report':
-        // Navigate to reports
+        onTabChange('advanced-reports');
         break;
     }
   };

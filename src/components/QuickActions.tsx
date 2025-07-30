@@ -47,7 +47,7 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onActionClick }) => {
       label: 'تقرير يومي',
       icon: FileText,
       color: 'bg-rose-500 hover:bg-rose-600',
-      description: 'عرض تقرير المبيعات اليومية'
+      description: 'عرض التقارير المتقدمة'
     },
   ];
 

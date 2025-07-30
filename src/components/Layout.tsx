@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { isSupabaseConfigured } from '../lib/supabase';
-import { LogOut, Coffee, Users, Store, FileText, Settings, Calculator, ShoppingCart } from 'lucide-react';
+import { LogOut, Coffee, Users, Store, FileText, Settings, Calculator, ShoppingCart, Package, BarChart3, UserCheck } from 'lucide-react';
 import NotificationSystem from './NotificationSystem';
 import SupabaseConnector from './SupabaseConnector';
 
@@ -30,10 +30,13 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
     { id: 'dashboard', label: 'الرئيسية', icon: Coffee },
     { id: 'sales', label: 'المبيعات', icon: Store },
     { id: 'settlements', label: 'التسويات', icon: Calculator },
+    { id: 'customers', label: 'العملاء', icon: UserCheck },
+    { id: 'inventory', label: 'المخزون', icon: Package },
     { id: 'employees', label: 'الموظفين', icon: Users },
     { id: 'stores', label: 'المحلات', icon: Store },
     { id: 'products', label: 'المنتجات', icon: Coffee },
     { id: 'reports', label: 'التقارير', icon: FileText },
+    { id: 'advanced-reports', label: 'التقارير المتقدمة', icon: BarChart3 },
     { id: 'settings', label: 'الإعدادات', icon: Settings },
   ];
 

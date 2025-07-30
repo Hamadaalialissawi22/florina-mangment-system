@@ -6,9 +6,12 @@ import Dashboard from './components/Dashboard';
 import ProductManagement from './components/ProductManagement';
 import SalesSystem from './components/SalesSystem';
 import Reports from './components/Reports';
+import AdvancedReports from './components/AdvancedReports';
 import EmployeeManagement from './components/EmployeeManagement';
 import StoreManagement from './components/StoreManagement';
 import SettlementSystem from './components/SettlementSystem';
+import CustomerManagement from './components/CustomerManagement';
+import InventoryManagement from './components/InventoryManagement';
 import Settings from './components/Settings';
 
 const AppContent: React.FC = () => {
@@ -33,13 +36,19 @@ const AppContent: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard onTabChange={setActiveTab} />;
       case 'sales':
         return <SalesSystem />;
       case 'products':
         return <ProductManagement />;
       case 'reports':
         return <Reports />;
+      case 'advanced-reports':
+        return <AdvancedReports />;
+      case 'customers':
+        return <CustomerManagement />;
+      case 'inventory':
+        return <InventoryManagement />;
       case 'employees':
         return <EmployeeManagement />;
       case 'stores':
@@ -49,7 +58,7 @@ const AppContent: React.FC = () => {
       case 'settings':
         return <Settings />;
       default:
-        return <Dashboard />;
+        return <Dashboard onTabChange={setActiveTab} />;
     }
   };
 
