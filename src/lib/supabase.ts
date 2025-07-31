@@ -71,22 +71,27 @@ export const getCurrentUser = async () => {
 
 // Function to update Supabase configuration
 export const updateSupabaseConfig = (url: string, key: string) => {
+  // تنظيف البيانات من المسافات الإضافية
+  const cleanUrl = url.trim();
+  const cleanKey = key.trim();
+  
+  // التحقق من صحة البيانات
+  if (!cleanUrl.includes('supabase.co')) {
+    throw new Error('رابط Supabase غير صحيح');
+  }
+  
+  if (cleanKey.length < 100) {
+    throw new Error('مفتاح API قصير جداً');
+  }
+  
   localStorage.setItem('supabase_url', url);
   localStorage.setItem('supabase_key', key);
   
   // Set the schema search path for the new connection
-  if (supabase) {
-    supabase.rpc('set_config', {
-      setting_name: 'search_path',
-      new_value: 'florina, public',
-      is_local: false
-    }).then(() => {
-      console.log('Schema search path updated');
-    }).catch(err => {
-      console.warn('Could not set search path:', err);
-    });
-  }
+  // سيتم إعادة تحميل الصفحة لتطبيق الإعدادات الجديدة
   
   // Reload the page to apply new configuration
-  window.location.reload();
+  setTimeout(() => {
+    window.location.reload();
+  }, 500);
 };

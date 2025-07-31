@@ -88,38 +88,77 @@ const DatabaseStatus: React.FC = () => {
             
             {!isSupabaseConfigured() && (
               <div className="bg-red-100 rounded-lg p-3 mb-3">
-                <h4 className="font-medium text-red-800 mb-2">خطوات الحل:</h4>
-                <ol className="text-sm text-red-700 space-y-1">
+                <h4 className="font-medium text-red-800 mb-3 flex items-center space-x-2 space-x-reverse">
+                  <span>🚀 خطوات الإعداد السريع:</span>
+                </h4>
+                <ol className="text-sm text-red-700 space-y-2">
                   <li>1. انقر على زر "Connect to Supabase" في أعلى الصفحة</li>
-                  <li>2. أنشئ مشروع جديد على <a href="https://supabase.com" target="_blank" className="underline">supabase.com</a></li>
+                  <li>2. أنشئ مشروع جديد على <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-red-900">supabase.com</a></li>
                   <li>3. انسخ الـ Project URL والـ API Key من إعدادات المشروع</li>
                   <li>4. الصقهما في النموذج واضغط "اتصال"</li>
-                  <li>5. شغل ملف إعداد المستخدم الإداري: database/admin/setup_admin_user.sql</li>
+                  <li>5. شغل ملفات المايجريشن في SQL Editor</li>
                 </ol>
+                <div className="mt-3 p-2 bg-red-200 rounded text-xs">
+                  <strong>💡 نصيحة:</strong> احفظ بيانات Supabase في مكان آمن لاستخدامها لاحقاً
+                </div>
               </div>
             )}
             
             {isSupabaseConfigured() && (error?.includes('جداول قاعدة البيانات غير موجودة') || error?.includes('جداول قاعدة البيانات الجديدة غير موجودة')) && (
-              <div className="bg-red-100 rounded-lg p-3 mb-3">
-                <h4 className="font-medium text-red-800 mb-2">خطوات إنشاء الجداول الجديدة:</h4>
-                <ol className="text-sm text-red-700 space-y-1">
-                  <li>1. اذهب إلى لوحة تحكم Supabase الخاصة بك</li>
-                  <li>2. انقر على "SQL Editor" في القائمة الجانبية</li>
-                  <li>3. انسخ محتوى ملفات المايجريشن الجديدة من مجلد database/schema</li>
-                  <li>4. الصق وشغل الملفات بالترتيب:</li>
-                  <li className="mr-4">• 01_create_database_structure.sql</li>
-                  <li className="mr-4">• 02_create_functions_and_triggers.sql</li>
-                  <li className="mr-4">• 03_create_views.sql</li>
-                  <li className="mr-4">• 04_create_security_policies.sql</li>
-                  <li className="mr-4">• 01_insert_sample_data.sql (من مجلد data)</li>
-                  <li className="mr-4">• setup_admin_user.sql (من مجلد admin)</li>
+              <div className="bg-red-100 rounded-lg p-4 mb-3">
+                <h4 className="font-medium text-red-800 mb-3 flex items-center space-x-2 space-x-reverse">
+                  <span>📋 خطوات إنشاء الجداول:</span>
+                </h4>
+                <div className="space-y-3">
+                  <div className="bg-white rounded p-3 border border-red-200">
+                    <h5 className="font-medium text-red-700 mb-2">الطريقة الأولى - ملف واحد شامل:</h5>
+                    <ol className="text-sm text-red-700 space-y-1">
+                      <li>1. اذهب إلى SQL Editor في Supabase</li>
+                      <li>2. انسخ والصق هذا الكود:</li>
+                    </ol>
+                    <div className="mt-2 bg-gray-100 p-2 rounded text-xs font-mono">
+                      <code>
+                        -- إنشاء schema<br/>
+                        CREATE SCHEMA IF NOT EXISTS florina;<br/>
+                        SET search_path TO florina, public;<br/>
+                        <br/>
+                        -- إنشاء جدول المستخدمين<br/>
+                        CREATE TABLE florina.users (<br/>
+                        &nbsp;&nbsp;id uuid PRIMARY KEY DEFAULT gen_random_uuid(),<br/>
+                        &nbsp;&nbsp;email text UNIQUE NOT NULL,<br/>
+                        &nbsp;&nbsp;full_name text NOT NULL,<br/>
+                        &nbsp;&nbsp;role text DEFAULT 'employee',<br/>
+                        &nbsp;&nbsp;is_active boolean DEFAULT true,<br/>
+                        &nbsp;&nbsp;created_at timestamptz DEFAULT now()<br/>
+                        );<br/>
+                        <br/>
+                        -- إدراج المستخدم الإداري<br/>
+                        INSERT INTO florina.users (email, full_name, role) VALUES<br/>
+                        ('florinacafe@gmail.com', 'مدير مقهى فلورينا', 'admin');
+                      </code>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded p-3 border border-red-200">
+                    <h5 className="font-medium text-red-700 mb-2">الطريقة الثانية - ملفات منفصلة:</h5>
+                    <ol className="text-sm text-red-700 space-y-1">
+                      <li>1. اذهب إلى SQL Editor في Supabase</li>
+                      <li>2. شغل الملفات بالترتيب من مجلد supabase/migrations:</li>
+                      <li className="mr-4">• 20250726092739_violet_violet.sql (الهيكل الأساسي)</li>
+                      <li className="mr-4">• 20250726092837_blue_sun.sql (الدوال والمحفزات)</li>
+                      <li className="mr-4">• 20250726092910_quick_haze.sql (العروض)</li>
+                      <li className="mr-4">• 20250726092951_pink_thunder.sql (سياسات الأمان)</li>
+                      <li className="mr-4">• 20250726093020_blue_torch.sql (البيانات التجريبية)</li>
+                      <li className="mr-4">• 20250729032137_steep_mountain.sql (المستخدم الإداري)</li>
+                    </ol>
+                  </div>
                 </ol>
               </div>
             )}
             
             <button
               onClick={checkConnection}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm flex items-center space-x-2 space-x-reverse"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm flex items-center space-x-2 space-x-reverse"
             >
               <RefreshCw className="w-4 h-4" />
               <span>إعادة المحاولة</span>

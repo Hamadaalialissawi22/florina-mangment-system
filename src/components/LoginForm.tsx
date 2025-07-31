@@ -52,6 +52,9 @@ const LoginForm: React.FC = () => {
               placeholder="florinacafe@gmail.com"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 للاختبار: florinacafe@gmail.com
+            </p>
           </div>
 
           <div>
@@ -67,12 +70,20 @@ const LoginForm: React.FC = () => {
               placeholder="123456789@@f"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 للاختبار: 123456789@@f
+            </p>
           </div>
 
           {error && (
             <div className="flex items-center space-x-2 space-x-reverse text-red-600 bg-red-50 p-3 rounded-lg">
               <AlertCircle className="w-5 h-5" />
-              <span className="text-sm">{error}</span>
+              <div className="flex-1">
+                <span className="text-sm font-medium">{error}</span>
+                <p className="text-xs mt-1">
+                  تأكد من إعداد قاعدة البيانات أولاً عبر "Connect to Supabase"
+                </p>
+              </div>
             </div>
           )}
 
