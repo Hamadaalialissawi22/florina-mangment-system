@@ -38,6 +38,40 @@ export const isSupabaseConfigured = () => {
   return supabase !== null;
 };
 
+// Test connection function
+export const testSupabaseConnection = async () => {
+  if (!supabase) {
+    throw new Error('Supabase not configured');
+  }
+  
+  try {
+    // Try a simple query to test connection
+    const { data, error } = await supabase
+      .from('florina.users')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      // Check for specific error types
+      if (error.message?.includes('relation "florina.users" does not exist')) {
+        throw new Error('جداول قاعدة البيانات غير موجودة في schema florina. يرجى تشغيل ملفات المايجريشن.');
+      } else if (error.message?.includes('Invalid API key') || error.code === 'PGRST301') {
+        throw new Error('مفتاح API غير صحيح. يرجى التحقق من إعدادات Supabase.');
+      } else if (error.message?.includes('Project not found') || error.code === 'PGRST000') {
+        throw new Error('مشروع Supabase غير موجود. يرجى التحقق من الرابط.');
+      } else {
+        throw new Error(`خطأ في الاتصال: ${error.message}`);
+      }
+    }
+    
+    return { success: true, data };
+  } catch (err: any) {
+    if (err.message?.includes('Failed to fetch')) {
+      throw new Error('فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت.');
+    }
+    throw err;
+  }
+};
 // Auth helpers
 export const signIn = async (email: string, password: string) => {
   if (!supabase) {
@@ -86,9 +120,6 @@ export const updateSupabaseConfig = (url: string, key: string) => {
   
   localStorage.setItem('supabase_url', url);
   localStorage.setItem('supabase_key', key);
-  
-  // Set the schema search path for the new connection
-  // سيتم إعادة تحميل الصفحة لتطبيق الإعدادات الجديدة
   
   // Reload the page to apply new configuration
   setTimeout(() => {

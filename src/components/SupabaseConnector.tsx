@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Database, X, CheckCircle, AlertCircle, ExternalLink, RefreshCw, Copy, Eye, EyeOff } from 'lucide-react';
-import { updateSupabaseConfig } from '../lib/supabase';
+import { updateSupabaseConfig, testSupabaseConnection } from '../lib/supabase';
 
 interface SupabaseConnectorProps {
   isOpen: boolean;
@@ -48,35 +48,6 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
     return true;
   };
 
-  const testConnection = async (testUrl: string, testKey: string) => {
-    try {
-      const { createClient } = await import('@supabase/supabase-js');
-      const testClient = createClient(testUrl, testKey);
-      
-      // Try a simple query to test connection
-      const { error: testError } = await testClient
-        .from('products')
-        .select('id')
-        .limit(1);
-      
-      // If the table doesn't exist, that's okay - it means connection works
-      if (testError && !testError.message.includes('relation "products" does not exist')) {
-        throw new Error(testError.message);
-      }
-      
-      return true;
-    } catch (err: any) {
-      if (err.message?.includes('Invalid API key') || err.message?.includes('JWT')) {
-        throw new Error('مفتاح API غير صحيح');
-      } else if (err.message?.includes('Project not found')) {
-        throw new Error('المشروع غير موجود. تحقق من الرابط');
-      } else if (err.message?.includes('Failed to fetch')) {
-        throw new Error('فشل في الاتصال. تحقق من اتصال الإنترنت');
-      } else {
-        throw new Error('فشل في الاتصال');
-      }
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,8 +60,12 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
     setError('');
 
     try {
-      // Test the connection first
-      await testConnection(url.trim(), key.trim());
+      // Save configuration temporarily
+      localStorage.setItem('temp_supabase_url', url.trim());
+      localStorage.setItem('temp_supabase_key', key.trim());
+      
+      // Test the connection
+      await testSupabaseConnection();
       
       // If successful, save the configuration
       updateSupabaseConfig(url.trim(), key.trim());
@@ -101,6 +76,9 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
       // Close the modal
       onClose();
     } catch (err: any) {
+      // Remove temporary configuration
+      localStorage.removeItem('temp_supabase_url');
+      localStorage.removeItem('temp_supabase_key');
       setError(err.message || 'حدث خطأ في الاتصال');
     } finally {
       setLoading(false);
@@ -213,6 +191,41 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
 
         {step === 2 && (
           <div className="space-y-4">
+            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-6">
+              <h4 className="font-medium text-emerald-800 mb-3">الحصول على بيانات الاتصال:</h4>
+              <ol className="text-sm text-emerald-700 space-y-3">
+                <li className="flex items-start space-x-2 space-x-reverse">
+                  <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">1</span>
+                  <div>
+                    <span>في لوحة تحكم المشروع، اذهب إلى <strong>Settings → API</strong></span>
+                    <p className="text-xs text-emerald-600 mt-1">⚙️ ستجد الإعدادات في الشريط الجانبي الأيسر</p>
+                  </div>
+                </li>
+                <li className="flex items-start space-x-2 space-x-reverse">
+                  <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">2</span>
+                  <div>
+                    <span>انسخ <strong>"Project URL"</strong> من قسم Configuration</span>
+                    <p className="text-xs text-emerald-600 mt-1">🔗 يبدأ بـ https://xxxxx.supabase.co</p>
+                  </div>
+                </li>
+                <li className="flex items-start space-x-2 space-x-reverse">
+                  <span className="bg-emerald-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs mt-0.5">3</span>
+                  <div>
+                    <span>انسخ <strong>"anon public"</strong> key من قسم Project API keys</span>
+                    <p className="text-xs text-emerald-600 mt-1">🔑 مفتاح طويل يبدأ بـ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</p>
+                  </div>
+                </li>
+              </ol>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-medium text-yellow-800 mb-2">📋 نصائح للنسخ:</h4>
+              <ul className="text-sm text-yellow-700 space-y-1">
+                <li>• استخدم Ctrl+A لتحديد النص كاملاً</li>
+                <li>• تأكد من عدم وجود مسافات إضافية في البداية أو النهاية</li>
+                <li>• لا تنسخ علامات الاقتباس إذا كانت موجودة</li>
+              </ul>
+            </div>
             <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-6">
               <h4 className="font-medium text-emerald-800 mb-3">الحصول على بيانات الاتصال:</h4>
               <ol className="text-sm text-emerald-700 space-y-3">
@@ -350,6 +363,14 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
                   <li>• المفتاح يبدأ بـ "eyJhbGciOiJIUzI1NiI..."</li>
                 </ul>
               </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2">🔍 للتحقق من صحة البيانات:</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• الرابط يجب أن يحتوي على "supabase.co"</li>
+                  <li>• المفتاح يجب أن يكون أطول من 100 حرف</li>
+                  <li>• المفتاح يبدأ بـ "eyJhbGciOiJIUzI1NiI..."</li>
+                </ul>
+              </div>
 
               <div className="flex space-x-3 space-x-reverse pt-4">
                 <button
@@ -388,6 +409,16 @@ const SupabaseConnector: React.FC<SupabaseConnectorProps> = ({ isOpen, onClose, 
                 </button>
               </div>
             </form>
+            
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <h4 className="font-medium text-emerald-800 mb-2">✅ بعد الاتصال الناجح:</h4>
+              <ol className="text-sm text-emerald-700 space-y-1">
+                <li>1. ستظهر رسالة "متصل بقاعدة البيانات"</li>
+                <li>2. اذهب إلى SQL Editor في Supabase</li>
+                <li>3. شغل ملفات المايجريشن من مجلد supabase/migrations</li>
+                <li>4. ابدأ بملف setup_admin_user.sql</li>
+              </ol>
+            </div>
             
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
               <h4 className="font-medium text-emerald-800 mb-2">✅ بعد الاتصال الناجح:</h4>

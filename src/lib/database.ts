@@ -18,11 +18,11 @@ const handleDatabaseError = (error: any, operation: string) => {
   }
 
   if (error?.message?.includes('relation') && error?.message?.includes('does not exist')) {
-    if (error?.message?.includes('florina.')) {
-      throw new Error('جداول قاعدة البيانات غير موجودة في schema florina. يرجى تشغيل ملفات المايجريشن الجديدة.');
-    } else {
-      throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن في Supabase SQL Editor.');
-    }
+    throw new Error('جداول قاعدة البيانات غير موجودة. يرجى تشغيل ملفات المايجريشن في Supabase SQL Editor.');
+  }
+  
+  if (error?.message?.includes('schema "florina" does not exist')) {
+    throw new Error('Schema florina غير موجود. يرجى تشغيل ملفات المايجريشن أولاً.');
   }
   
   throw new Error(`خطأ في ${operation}: ${error?.message || 'خطأ غير معروف'}`);
