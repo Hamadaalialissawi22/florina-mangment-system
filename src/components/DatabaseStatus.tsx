@@ -117,25 +117,23 @@ const DatabaseStatus: React.FC = () => {
                       <li>2. انسخ والصق هذا الكود:</li>
                     </ol>
                     <div className="mt-2 bg-gray-100 p-2 rounded text-xs font-mono">
-                      <code>
-                        -- إنشاء schema<br/>
-                        CREATE SCHEMA IF NOT EXISTS florina;<br/>
-                        SET search_path TO florina, public;<br/>
-                        <br/>
-                        -- إنشاء جدول المستخدمين<br/>
-                        CREATE TABLE florina.users (<br/>
-                        &nbsp;&nbsp;id uuid PRIMARY KEY DEFAULT gen_random_uuid(),<br/>
-                        &nbsp;&nbsp;email text UNIQUE NOT NULL,<br/>
-                        &nbsp;&nbsp;full_name text NOT NULL,<br/>
-                        &nbsp;&nbsp;role text DEFAULT 'employee',<br/>
-                        &nbsp;&nbsp;is_active boolean DEFAULT true,<br/>
-                        &nbsp;&nbsp;created_at timestamptz DEFAULT now()<br/>
-                        );<br/>
-                        <br/>
-                        -- إدراج المستخدم الإداري<br/>
-                        INSERT INTO florina.users (email, full_name, role) VALUES<br/>
-                        ('florinacafe@gmail.com', 'مدير مقهى فلورينا', 'admin');
-                      </code>
+                      <code>{`-- إنشاء schema
+CREATE SCHEMA IF NOT EXISTS florina;
+SET search_path TO florina, public;
+
+-- إنشاء جدول المستخدمين
+CREATE TABLE florina.users (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email text UNIQUE NOT NULL,
+  full_name text NOT NULL,
+  role text DEFAULT 'employee',
+  is_active boolean DEFAULT true,
+  created_at timestamptz DEFAULT now()
+);
+
+-- إدراج المستخدم الإداري
+INSERT INTO florina.users (email, full_name, role) VALUES
+('florinacafe@gmail.com', 'مدير مقهى فلورينا', 'admin');`}</code>
                     </div>
                   </div>
                   
@@ -152,7 +150,7 @@ const DatabaseStatus: React.FC = () => {
                       <li className="mr-4">• 20250729032137_steep_mountain.sql (المستخدم الإداري)</li>
                     </ol>
                   </div>
-                </ol>
+                </div>
               </div>
             )}
             
