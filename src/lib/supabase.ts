@@ -41,24 +41,58 @@ export const isSupabaseConfigured = () => {
 // Test connection function
 export const testSupabaseConnection = async () => {
   if (!supabase) {
-    throw new Error('Supabase not configured');
+    // Try to create client with temporary config
+    const tempUrl = localStorage.getItem('temp_supabase_url');
+    const tempKey = localStorage.getItem('temp_supabase_key');
+    
+    if (!tempUrl || !tempKey) {
+      throw new Error('بيانات الاتصال غير مكتملة');
+    }
+    
+    const tempClient = createClient(tempUrl, tempKey);
+    
+    try {
+      // Test basic connection
+      const { data, error } = await tempClient
+        .from('information_schema.tables')
+        .select('table_name')
+        .limit(1);
+      
+      if (error) {
+        if (error.message?.includes('Invalid API key') || error.code === 'PGRST301') {
+          throw new Error('مفتاح API غير صحيح. تأكد من نسخ "anon public" key كاملاً');
+        } else if (error.message?.includes('Project not found') || error.code === 'PGRST000') {
+          throw new Error('مشروع Supabase غير موجود. تأكد من صحة الرابط');
+        } else if (error.message?.includes('Failed to fetch')) {
+          throw new Error('فشل في الاتصال. تحقق من اتصال الإنترنت والرابط');
+        } else {
+          throw new Error(`خطأ في الاتصال: ${error.message}`);
+        }
+      }
+      
+      return { success: true, data };
+    } catch (err: any) {
+      if (err.message?.includes('Failed to fetch')) {
+        throw new Error('فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت والرابط');
+      }
+      throw err;
+    }
   }
   
   try {
     // Try a simple query to test connection
     const { data, error } = await supabase
-      .from('florina.users')
-      .select('id')
+      .from('information_schema.tables')
+      .select('table_name')
       .limit(1);
     
     if (error) {
-      // Check for specific error types
-      if (error.message?.includes('relation "florina.users" does not exist')) {
-        throw new Error('جداول قاعدة البيانات غير موجودة في schema florina. يرجى تشغيل ملفات المايجريشن.');
-      } else if (error.message?.includes('Invalid API key') || error.code === 'PGRST301') {
-        throw new Error('مفتاح API غير صحيح. يرجى التحقق من إعدادات Supabase.');
+      if (error.message?.includes('Invalid API key') || error.code === 'PGRST301') {
+        throw new Error('مفتاح API غير صحيح. تأكد من نسخ "anon public" key كاملاً');
       } else if (error.message?.includes('Project not found') || error.code === 'PGRST000') {
-        throw new Error('مشروع Supabase غير موجود. يرجى التحقق من الرابط.');
+        throw new Error('مشروع Supabase غير موجود. تأكد من صحة الرابط');
+      } else if (error.message?.includes('Failed to fetch')) {
+        throw new Error('فشل في الاتصال. تحقق من اتصال الإنترنت والرابط');
       } else {
         throw new Error(`خطأ في الاتصال: ${error.message}`);
       }
@@ -67,7 +101,7 @@ export const testSupabaseConnection = async () => {
     return { success: true, data };
   } catch (err: any) {
     if (err.message?.includes('Failed to fetch')) {
-      throw new Error('فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت.');
+      throw new Error('فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت والرابط');
     }
     throw err;
   }
@@ -111,15 +145,19 @@ export const updateSupabaseConfig = (url: string, key: string) => {
   
   // التحقق من صحة البيانات
   if (!cleanUrl.includes('supabase.co')) {
-    throw new Error('رابط Supabase غير صحيح');
+    throw new Error('رابط Supabase غير صحيح. يجب أن يحتوي على "supabase.co"');
   }
   
   if (cleanKey.length < 100) {
-    throw new Error('مفتاح API قصير جداً');
+    throw new Error('مفتاح API قصير جداً. تأكد من نسخ المفتاح كاملاً');
   }
   
-  localStorage.setItem('supabase_url', url);
-  localStorage.setItem('supabase_key', key);
+  localStorage.setItem('supabase_url', cleanUrl);
+  localStorage.setItem('supabase_key', cleanKey);
+  
+  // Clean up temporary config
+  localStorage.removeItem('temp_supabase_url');
+  localStorage.removeItem('temp_supabase_key');
   
   // Reload the page to apply new configuration
   setTimeout(() => {

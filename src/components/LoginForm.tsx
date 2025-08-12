@@ -30,11 +30,11 @@ const LoginForm: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-50 flex items-center justify-center p-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
+            placeholder="أدخل كلمة المرور"
             <Coffee className="w-16 h-16 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">مقهى فلورينا</h1>
-          <p className="text-gray-600">نظام إدارة المقهى</p>
+            💡 <strong>للاختبار:</strong> 123456789@@f
           <p className="text-sm text-gray-500 mt-2">مطور بواسطة: حمادة علي</p>
         </div>
 
@@ -81,7 +81,7 @@ const LoginForm: React.FC = () => {
               <div className="flex-1">
                 <span className="text-sm font-medium">{error}</span>
                 <p className="text-xs mt-1">
-                  تأكد من إعداد قاعدة البيانات أولاً عبر "Connect to Supabase"
+                  💡 <strong>نصيحة:</strong> تأكد من إعداد قاعدة البيانات أولاً عبر "Connect to Supabase"
                 </p>
               </div>
             </div>
