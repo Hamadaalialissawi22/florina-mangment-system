@@ -29,16 +29,16 @@ const LoginForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-50 flex items-center justify-center p-4" dir="rtl">
       <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        
         <div className="text-center mb-8">
-            placeholder="أدخل كلمة المرور"
-            <Coffee className="w-16 h-16 text-blue-600" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">مقهى فلورينا</h1>
-            💡 <strong>للاختبار:</strong> 123456789@@f
-          <p className="text-sm text-gray-500 mt-2">مطور بواسطة: حمادة علي</p>
+          <Coffee className="w-16 h-16 text-blue-600 mx-auto" />
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">مقهى فلورينا</h1>
+        <p className="text-sm text-gray-500 mt-2">💡 <strong>للاختبار:</strong> 123456789@@f</p>
+        <p className="text-sm text-gray-500">مطور بواسطة: حمادة علي</p>
+
+        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
               البريد الإلكتروني
